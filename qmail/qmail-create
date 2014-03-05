@@ -41,4 +41,3 @@ echo "&$user"@"$domain" | tee -a /var/qmail/alias/.qmail-$email":"team
 done
 
 ln -s /var/qmail/alias/.qmail-$email":"team /var/qmail/alias/.qmail-$email"team"
-update-qmail-whitlist
