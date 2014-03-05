@@ -34,7 +34,7 @@ else
 
 fi
 
-for something in "${array[@]}" ;
+for user in "${array[@]}" ;
 
 do
 echo "&$user"@"$domain" | tee -a /var/qmail/alias/.qmail-$email":"team 
