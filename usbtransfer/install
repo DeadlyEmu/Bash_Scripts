@@ -2,4 +2,4 @@
 
 cp usbtransfer "/usr/local/bin"
 
-echo "run usbtransfer --help for info"
+echo "run 'usbtransfer --help' for info"

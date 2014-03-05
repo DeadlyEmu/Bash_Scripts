@@ -1,0 +1,44 @@
+#!/bin/bash
+#
+#Created By Ryan Stokes
+#Date 5th March 2014
+#
+#create a qmail email list and populate with users
+#
+#Hack this code to meet your needs. change 'domain' variable to state your domain
+#
+
+domain="enter domain here"
+array=( $@ )
+
+read -p "Enter list name e.g python:  " email
+if [ -f /var/qmail/alias/.qmail-$email":"team ]; then
+    echo "email list exists"
+    exit 1
+fi
+echo "users to added to "$email".team"@"$domain"
+for user in "${array[@]}" ;
+
+do
+
+echo ""$user"@technophobia.com"
+done
+
+read -p "Continue (y/n)?" check1
+
+if [ "$check1" == "y" ]; then
+    echo "User selected Yes"
+else
+    echo "user did not select yes, Exiting"
+    exit 1
+
+fi
+
+for something in "${array[@]}" ;
+
+do
+echo "&$user"@"$domain" | tee -a /var/qmail/alias/.qmail-$email":"team 
+done
+
+ln -s /var/qmail/alias/.qmail-$email":"team /var/qmail/alias/.qmail-$email"team"
+update-qmail-whitlist
