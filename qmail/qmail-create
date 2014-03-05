@@ -21,7 +21,7 @@ for user in "${array[@]}" ;
 
 do
 
-echo ""$user"@technophobia.com"
+echo ""$user"@$domain"
 done
 
 read -p "Continue (y/n)?" check1
