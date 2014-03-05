@@ -1,0 +1,5 @@
+#!/bin/bash
+
+cp qmail-add /usr/local/bin
+echo "qmail-add installed"
+echo "check out www.github.com/stokes46 for more information""
