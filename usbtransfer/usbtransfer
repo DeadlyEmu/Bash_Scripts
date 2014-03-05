@@ -1,0 +1,242 @@
+#!/bin/bash
+#
+#Script for transfering any amount of files to multiple removeable pen drives or external HDD's
+#tested and working on ubuntu 13.10
+#Ryan Stokes
+#
+
+#Variables
+clam="clamav"
+quite=$1
+folder="/home/$USER/usb_drive"
+USB="/home/$USER/usb_scanning"
+date=$(date +%F"@"%R)
+remote=$(cat ~/.usbconfig | grep Remote_Folder_Location | awk '{first = $1; $1 = ""; print $0; }')
+label=$(cat ~/.usbconfig | grep Drive_Label| awk '{first = $1; $1 = ""; print $0; }')
+mountpoint=( $(lsblk | grep part | grep " 1 " | awk '{print $1}' |awk -F└─ '{print $2}') )
+START='1'
+END=$(lsblk | grep part | grep " 1 " | awk '{print $1}' |awk -F└─ '{print $2}' | wc -l)
+clamcheck=$(dpkg-query -W -f='${Status}\n' clamav | awk '{print $3}')
+help1() {
+
+        cat <<"EOF"      
+------Transfer Help------
+
+Usage:transfer [Options]
+
+leave options as null to get the gui
+
+options
+
+-q | --quiet) to run the command with basic settings
+
+
+EOF
+}
+
+
+config () {
+cat <<"EOF"
+
+#Config for usbtransfer
+#Edit to suit your needs
+#e.g:remote folder example: REMOTESERVERNAME:/home/folder/folder
+#Local folder example: /home/folder/myfolder
+
+Remote_Folder_Location= <add Loction of the remote folder here>
+Drive_Label= <What to call the drive>
+
+
+EOF
+
+
+}
+#Functions
+mount () {
+for (( x = ${START}; x <=${END}; x++ ))
+do
+	if [ ! -d /media/usb$1 ]; then
+        sudo mkdir /media/usb$1
+	
+fi
+
+done
+
+index=1
+for mount in "${mountpoint[@]}" ;
+do
+	sudo mount -t vfat /dev/$mount /media/usb$index;
+	let index++
+
+done
+}
+#formats the drive
+
+format () {
+index=1
+for mount in "${mountpoint[@]}" ;
+do
+    sudo mkdir /media/usb$index;
+    sudo umount /dev/$mount 2>&1 /dev/null;
+    sudo mkfs -t vfat -n "$label" /dev/$mount |  tee -a $USB/"$date".log;
+    sudo mount -t vfat /dev/$mount /media/usb$index;
+	let index++
+
+done
+}
+
+#deletes the contents of the drives
+delete () {
+sudo rm -vr /media/usb$1/*
+}
+
+#pulls down the files and transfers them to the drive
+movetest () {
+scp -r $remote $folder
+
+}
+move () {
+mount
+scp -r $remote/* $folder
+sudo cp -rv $folder/* /media/usb$1 &
+
+}
+
+#removes files and folders created on the local system
+clean () {
+rm -rv $folder
+}
+
+#scans the drives for any virus
+scan () {
+sudo clamscan --stdout --no-summary /media/usb$1 | tee -a $USB/"$date".log
+}
+
+loud () {
+if [ ! -f ~/.usbconfig ]; then
+           echo "config not found. Run $0 --config"
+	   exit 1
+   fi	  
+sudo echo "I NOW HAVE POWER"
+echo "This script is created to make transfering files to multiple usb drives easy with added checking and virus scanning."
+read -p "Press [Enter] to continue"
+echo "the initial scan of the drives will happen now"
+for (( y = ${START}; y <=${END}; y++ )) do mount $y; done
+whiptail --title "Test" --checklist --separate-output "Choose:" 20 78 15 \
+	"Format Drive's" "" off \
+	"Delete Contents" "" off \
+	"Move Files" "" off \
+	"Clean up created folders?" "" off \
+	"scan" "" off \
+	2>results
+
+while read choice
+do
+		case $choice in
+		"Format Drive's") format
+		;;
+		"Delete Contents") for (( y = ${START}; y <=${END}; y++ )) do delete $y; done
+		;;
+		"Move Files") for (( y = ${START}; y <=${END}; y++ )) do move $y; wait; done
+		;;
+		"Clean up created folders?") clean
+		;;
+		"scan")  for (( y = ${START}; y <=${END}; y++ )) do scan $y; done
+		;;
+		*)
+		;;
+
+esac
+wait
+		done < results
+
+            for mount in "${mountpoint[@]}" ;
+            do
+	        sudo umount /dev/$mount 2>&1 /dev/null;
+            done
+
+}
+
+
+#create local folders
+for mount in "${mountpoint[@]}" ;
+do
+	sudo umount /media/usb* 2>&1 /dev/null;
+done
+sudo rm -r /media/usb*
+sudo echo
+if [ "$clamcheck" = "not-installed" ]; then
+	echo "clamav is not installed!!!!! It is needed for this script to run. do you want to install it? (yes/no)"
+	read something
+	if [ $something = yes ]; then
+		sudo apt-get install -y clamav
+	else
+		echo "This script wont run unless clamav is installed." 
+		exit 1
+	fi
+fi
+if [ ! -d $folder ]; then
+        mkdir $folder
+fi
+
+
+if [ ! -d $USB ]; then
+         mkdir $USB
+fi
+
+#script starts with scan
+
+if [ -z $quite ]; then
+	echo "USBTRANSFER Tool Enjoy this open source love. Enter your password to begin."
+	sudo freshclam | tee -a $USB/"$date".log
+	loud
+
+
+else
+
+	case $1 in
+
+    	--config)
+            config > ~/.usbconfig
+	    echo "Config file successfully created please edit /home/$USER/.usbconfig"
+            ;;
+    	--configtest)
+	   if [ ! -f ~/.usbconfig ]; then
+               echo "config not found. Run $0 --config"
+	       exit 1
+       else
+	       echo "Config file exists. If you see errors then the config might have an error." 
+   	   fi
+           echo "going to try and download your file as a test"	   
+           sleep 5
+           movetest
+	   clean
+            ;;
+    	-h|--help)
+            help1
+            ;;
+    	-q|--quiet)
+	   if [ ! -f ~/.usbconfig ]; then
+               echo "config not found. Run $0 --config"
+	       exit 1
+   	   fi	   
+	    echo "USBTRANSFER Tool Enjoy this open source love. Enter your password to begin."       
+      	    sudo echo "I NOW HAVE POWER"
+            sudo freshclam |  tee -a $USB/"$date".log
+	    format |  tee -a $USB/"$date".log
+	    for (( y = ${START}; y <=${END}; y++ )) do move $y; wait; done
+            clean
+	    for (( y = ${START}; y <=${END}; y++ )) do scan $y; done
+            for mount in "${mountpoint[@]}" ;
+            do
+	        sudo umount /dev/$mount 2>&1 /dev/null;
+            done
+
+            ;;
+      	*)
+            echo "Usage: $0 --help"
+            exit 1
+            ;;
+esac
+
+fi

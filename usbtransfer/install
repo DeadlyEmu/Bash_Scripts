@@ -1,0 +1,5 @@
+#!/bin/bash
+
+cp usbtransfer "/usr/local/bin"
+
+echo "run usbtransfer --help for info"
