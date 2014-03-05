@@ -7,7 +7,7 @@
 
 #Variables
 clam="clamav"
-quite=$1
+quiet=$1
 folder="/home/$USER/usb_drive"
 USB="/home/$USER/usb_scanning"
 date=$(date +%F"@"%R)
@@ -186,7 +186,7 @@ fi
 
 #script starts with scan
 
-if [ -z $quite ]; then
+if [ -z $quiet ]; then
 	echo "USBTRANSFER Tool Enjoy this open source love. Enter your password to begin."
 	sudo freshclam | tee -a $USB/"$date".log
 	loud
