@@ -1,0 +1,15 @@
+#!/bin/bash
+
+array=(compass sass)
+
+for package in ${array[*]}
+do
+gem list $package -i &> /dev/null
+
+if [ $? -gt 0 ]; then
+    echo "not installed"
+    gem install $package
+else
+    echo "$package already installed, skiping"
+fi
+done
