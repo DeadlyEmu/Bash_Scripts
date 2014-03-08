@@ -1,4 +1,11 @@
 #!/bin/bash
+#
+#Ryan Stokes
+#Created 8th March 2014
+#add the gems you want to install in the array 
+#for example (gem1 gem2 gem3 gem4 etc)
+#the script check if the gem is installed before trying to install
+
 
 array=(compass sass)
 
@@ -9,7 +16,11 @@ gem list $package -i &> /dev/null
 if [ $? -gt 0 ]; then
     echo "not installed"
     gem install $package
+    echo $package | tee -a ~/.gemsinstalled &> /dev/null
 else
     echo "$package already installed, skiping"
 fi
 done
+echo "Packages installed:"
+cat ~/.gemsinstalled
+rm ~/.gemsinstalled
