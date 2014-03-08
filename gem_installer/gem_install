@@ -7,7 +7,7 @@
 #the script check if the gem is installed before trying to install
 
 
-array=(compass sass)
+array=(compass sass vimpack vim-flavor)
 
 for package in ${array[*]}
 do
@@ -16,7 +16,11 @@ gem list $package -i &> /dev/null
 if [ $? -gt 0 ]; then
     echo "not installed"
     gem install $package
-    echo $package | tee -a ~/.gemsinstalled &> /dev/null
+    if [ $? -gt 0 ]; then
+        echo "$package failed to install" | tee -a ~/.gemsinstalled &> /dev/null
+    else
+        echo "$package installed " | tee -a ~/.gemsinstalled &> /dev/null
+    fi
 else
     echo "$package already installed, skiping"
 fi
