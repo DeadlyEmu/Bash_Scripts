@@ -4,7 +4,7 @@
 #Created 8th March 2014
 #add the gems you want to install in the array 
 #for example (gem1 gem2 gem3 gem4 etc)
-#the script check if the gem is installed before trying to install
+#the script check if the gem is installed before trying to install and also give you a output for each package
 
 
 array=(compass sass vimpack vim-flavor)
@@ -14,7 +14,7 @@ do
 gem list $package -i &> /dev/null
 
 if [ $? -gt 0 ]; then
-    echo "not installed"
+    echo "$package not installed"
     gem install $package
     if [ $? -gt 0 ]; then
         echo "$package failed to install" | tee -a ~/.gemsinstalled &> /dev/null
@@ -22,7 +22,7 @@ if [ $? -gt 0 ]; then
         echo "$package installed " | tee -a ~/.gemsinstalled &> /dev/null
     fi
 else
-    echo "$package already installed, skiping"
+    echo "$package already installed, skiping" 
 fi
 done
 echo "Packages installed:"
